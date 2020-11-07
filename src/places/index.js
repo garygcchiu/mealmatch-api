@@ -2,7 +2,7 @@ const { getLoggerPath } = require('./utils');
 const placesService = require('./placesService');
 
 const logger = require(getLoggerPath()).child({
-    service: 'places',
+    service: 'places'
 });
 
 const ROUTE_MAP = {
@@ -26,7 +26,7 @@ const ROUTE_MAP = {
 exports.handler = async (event, context) => {
     let serviceResponse;
     const { path = '', queryStringParameters: queryStringParams } = event;
-    logger.info(`Processing request at ${path} with params ${queryStringParams}`);
+    logger.info(`Processing request at ${path} with params ${JSON.stringify(queryStringParams)}`);
 
     try {
         switch (path.split('/').pop()) {
@@ -37,15 +37,13 @@ exports.handler = async (event, context) => {
                 serviceResponse = await placesService.getPlaceDetails(queryStringParams);
                 break;
             case ROUTE_MAP.NEARBY:
-                serviceResponse = await placesService.getNearby(queryStringParams);
+                const { location } = queryStringParams;
+                serviceResponse = await placesService.getNearby(queryStringParams, location,2000);
                 break;
         }
     } catch (err) {
         logger.error(`Places Function caught error when processing ${path} with params ${queryStringParams}: ${err.message}`);
-        return {
-            statusCode: 500,
-            body: 'Internal Server Error'
-        }
+        serviceResponse = err.message;
     }
 
     return {

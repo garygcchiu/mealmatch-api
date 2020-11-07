@@ -51,6 +51,19 @@ Resources:
       Environment:
         Variables:
           NODE_ENV: !Ref Env
+      Policies:
+        - Statement:
+          - Sid: SSMDescribeParametersPolicy
+            Effect: Allow
+            Action:
+              - ssm:DescribeParameters
+            Resource: '*'
+          - Sid: SSMGetParameterPolicy
+            Effect: Allow
+            Action:
+              - ssm:GetParameters
+              - ssm:GetParameter
+            Resource: '*'
 
   ########################
   #

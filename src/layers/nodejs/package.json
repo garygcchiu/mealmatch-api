@@ -1,6 +1,7 @@
 {
   "dependencies": {
     "google-utils": "latest",
-    "config-utils": "latest"
+    "config-utils": "latest",
+    "logger": "latest"
   }
 }
