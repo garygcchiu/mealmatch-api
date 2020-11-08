@@ -35,16 +35,19 @@ Resources:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
           Properties:
             Path: /places/nearby
+            RestApiId: !Ref MealMatchAPIGateway
             Method: get
         Search:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
           Properties:
             Path: /places/search
+            RestApiId: !Ref MealMatchAPIGateway
             Method: get
         Details:
           Type: Api
           Properties:
             Path: /places
+            RestApiId: !Ref MealMatchAPIGateway
             Method: get
       Layers:
         - !Ref UtilsLayer
@@ -67,6 +70,22 @@ Resources:
 
   ########################
   #
+  # API Gateway
+  #
+  ########################
+  MealMatchAPIGateway:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: Prod
+      Cors: "'*'"
+      Auth:
+        DefaultAuthorizer: MealMatchCognitoAuthorizer
+        Authorizers:
+          MealMatchCognitoAuthorizer:
+            UserPoolArn: '{{resolve:ssm:MealMatchCognitoUserPoolArn:1}}'
+
+  ########################
+  #
   # Layers
   #
   ########################
@@ -79,6 +98,35 @@ Resources:
       CompatibleRuntimes:
         - nodejs12.x
 
+  ########################
+  #
+  # API Gateway Custom Domain Name
+  #
+  ########################
+  ApiDomain:
+    Type: AWS::ApiGateway::DomainName
+    Properties:
+      RegionalCertificateArn: '{{resolve:ssm:MealMatchApiCertificateArn:1}}'
+      DomainName: !Sub '${Env}.api.mealmatch.io'
+      EndpointConfiguration:
+        Types:
+          - REGIONAL
+      SecurityPolicy: TLS_1_2
+
+  ########################
+  #
+  # API Gateway BasePathMapping for Custom Domain
+  #
+  ########################
+  ApiDomainMapping:
+    Type: AWS::ApiGateway::BasePathMapping
+    Properties:
+      DomainName: !Ref ApiDomain
+      RestApiId: !Ref MealMatchAPIGateway
+      Stage: !Ref MealMatchAPIGateway.Stage
+    DependsOn:
+      - MealMatchAPIGateway
+      - ApiDomain
 
 Outputs:
   # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
@@ -86,10 +134,14 @@ Outputs:
   # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
   SampleApi:
     Description: "API Gateway endpoint URL for Prod stage for Places endpoint"
-    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/places/"
+    Value: !Sub "https://${MealMatchAPIGateway}.execute-api.${AWS::Region}.amazonaws.com/Prod/places/"
   PlacesFunction:
     Description: "Places Lambda Function ARN"
     Value: !GetAtt PlacesFunction.Arn
   PlacesFunctionIamRole:
     Description: "Implicit IAM Role created for Places function"
     Value: !GetAtt PlacesFunctionRole.Arn
+  CustomApiDomain:
+    Description: "Custom domain name for the API"
+    Value: !GetAtt ApiDomain.RegionalDomainName
+
