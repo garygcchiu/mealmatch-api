@@ -128,6 +128,25 @@ Resources:
       - MealMatchAPIGateway
       - ApiDomain
 
+  ########################
+  #
+  # DynamoDB Tables
+  #
+  ########################
+  UserTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: User
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+
 Outputs:
   # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
   # Find out more about other implicit resources you can reference within SAM
