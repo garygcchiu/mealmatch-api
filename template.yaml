@@ -68,6 +68,26 @@ Resources:
               - ssm:GetParameter
             Resource: '*'
 
+  UsersCognitoPostConfirmationFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/users/post-confirmation
+      Handler: index.handler
+      Runtime: nodejs12.x
+      Layers:
+        - !Ref UtilsLayer
+      Environment:
+        Variables:
+          NODE_ENV: !Ref Env
+          USERS_TABLE: !Ref UserTable
+      Policies:
+        - Statement:
+          - Sid: DynamoDBUsersTablePowerUser
+            Effect: Allow
+            Action:
+              - dynamodb:*
+            Resource: 'arn:aws:dynamodb:us-east-1:268394913050:table/User'
+
   ########################
   #
   # API Gateway
