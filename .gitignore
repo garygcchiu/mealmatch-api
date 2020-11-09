@@ -53,6 +53,7 @@ build/Release
 # Dependency directories
 node_modules/*
 src/*/node_modules
+src/**/node_modules
 src/layers/nodejs/node_modules/*/node_modules
 jspm_packages/
 
