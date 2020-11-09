@@ -25,24 +25,31 @@ const ROUTE_MAP = {
  */
 exports.handler = async (event, context) => {
     let serviceResponse;
-    const { path = '', queryStringParameters: queryStringParams } = event;
-    logger.info(`Processing request at ${path} with params ${JSON.stringify(queryStringParams)}`);
+    const { path = '', queryStringParameters } = event;
+    logger.info(`Processing request at ${path} with params ${JSON.stringify(queryStringParameters)}`);
+
+    // read params
+    const location = queryStringParameters['location'];
+    const query = queryStringParameters['query'];
+    const radius = queryStringParameters['radius'] || 7500;
+
+    console.log(`url params = ${location}, query ${query} , radius = ${radius}`);
 
     try {
         switch (path.split('/').pop()) {
             case ROUTE_MAP.SEARCH:
-                serviceResponse = await placesService.getSearchResults(queryStringParams);
+                const sessiontoken = '50501023901239123';
+                serviceResponse = await placesService.getSearchResults(location, radius, query, sessiontoken);
                 break;
             case ROUTE_MAP.DETAILS:
-                serviceResponse = await placesService.getPlaceDetails(queryStringParams);
+                serviceResponse = await placesService.getPlaceDetails(queryStringParameters);
                 break;
             case ROUTE_MAP.NEARBY:
-                const { location } = queryStringParams;
-                serviceResponse = await placesService.getNearby(queryStringParams, location,2000);
+                serviceResponse = await placesService.getNearby(queryStringParameters, location,2000);
                 break;
         }
     } catch (err) {
-        logger.error(`Places Function caught error when processing ${path} with params ${queryStringParams}: ${err.message}`);
+        logger.error(`Places Function caught error when processing ${path} with params ${queryStringParameters}: ${err.message}`);
         serviceResponse = err.message;
     }
 

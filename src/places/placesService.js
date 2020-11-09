@@ -1,5 +1,5 @@
 const { getGoogleUtilsPath, getConfigUtilsPath, getLogger } = require('./utils');
-const { getNearbyPlaces } = require(getGoogleUtilsPath());
+const { getNearbyPlaces, getPlacesAutocomplete } = require(getGoogleUtilsPath());
 const { getSSMParameter } = require(getConfigUtilsPath());
 
 const getNearby = async (params, location, radius) => {
@@ -8,8 +8,10 @@ const getNearby = async (params, location, radius) => {
     return getNearbyPlaces(googlePlacesAPIKey, location, radius);
 }
 
-const getSearchResults = async (params) => {
-    return 'handleSearch';
+const getSearchResults = async (location, radius, query, sessiontoken) => {
+    const googlePlacesAPIKey = await getSSMParameter('GooglePlacesAPIKey');
+
+    return getPlacesAutocomplete(googlePlacesAPIKey, location, radius, query, sessiontoken);
 }
 
 const getPlaceDetails = async (params) => {

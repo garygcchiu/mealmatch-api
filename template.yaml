@@ -19,11 +19,11 @@ Parameters:
       - prod
 
 Resources:
-  ########################
+  #########################################################
   #
   # Lambda Functions
   #
-  ########################
+  #########################################################
   PlacesFunction:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
@@ -68,11 +68,11 @@ Resources:
               - ssm:GetParameter
             Resource: '*'
 
-  ########################
+  #########################################################
   #
   # API Gateway
   #
-  ########################
+  #########################################################
   MealMatchAPIGateway:
     Type: AWS::Serverless::Api
     Properties:
@@ -84,11 +84,11 @@ Resources:
           MealMatchCognitoAuthorizer:
             UserPoolArn: '{{resolve:ssm:MealMatchCognitoUserPoolArn:1}}'
 
-  ########################
+  #########################################################
   #
   # Layers
   #
-  ########################
+  #########################################################
   UtilsLayer:
     Type: AWS::Serverless::LayerVersion
     Properties:
@@ -98,11 +98,11 @@ Resources:
       CompatibleRuntimes:
         - nodejs12.x
 
-  ########################
+  #########################################################
   #
   # API Gateway Custom Domain Name
   #
-  ########################
+  #########################################################
   ApiDomain:
     Type: AWS::ApiGateway::DomainName
     Properties:
@@ -113,11 +113,11 @@ Resources:
           - REGIONAL
       SecurityPolicy: TLS_1_2
 
-  ########################
+  #########################################################
   #
   # API Gateway BasePathMapping for Custom Domain
   #
-  ########################
+  #########################################################
   ApiDomainMapping:
     Type: AWS::ApiGateway::BasePathMapping
     Properties:
