@@ -68,6 +68,7 @@ Resources:
               - ssm:GetParameter
             Resource: '*'
 
+  # Runs from a Cognito Post Confirmation trigger to transfer users from Cognito User Pool to DynamoDB
   UsersCognitoPostConfirmationFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -87,6 +88,26 @@ Resources:
             Action:
               - dynamodb:*
             Resource: 'arn:aws:dynamodb:us-east-1:268394913050:table/User'
+
+  CategoriesExploreFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: src/categories/explore/
+      Handler: index.handler
+      Runtime: nodejs12.x
+      Events:
+        Explore:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            Path: /categories/explore
+            RestApiId: !Ref MealMatchAPIGateway
+            Method: get
+      Layers:
+        - !Ref UtilsLayer
+      Environment:
+        Variables:
+          NODE_ENV: !Ref Env
+          CATEGORY_TABLE: Category
 
   ########################
   #
