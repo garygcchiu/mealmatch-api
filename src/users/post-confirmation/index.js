@@ -21,29 +21,31 @@ exports.handler = async (event, context) => {
         let ddbParams = {
             Item: {
                 'id': { S: event.request.userAttributes.sub },
-                'username': { S: event.userName },
-                'name': { S: event.request.userAttributes.name },
-                'given_name': { S: event.request.userAttributes.given_name },
-                'family_name': { S: event.request.userAttributes.family_name },
+                'username': { S: event.userName || event.request.userAttributes.email },
+                'name': { S: event.request.userAttributes.name || '' },
+                'given_name': { S: event.request.userAttributes.given_name || '' },
+                'family_name': { S: event.request.userAttributes.family_name || '' },
                 'email': { S: event.request.userAttributes.email },
                 'created_at': { S: date.toISOString() },
             },
             TableName: tableName
         };
 
-        // Call DynamoDB
+        // call DynamoDB
         try {
             await ddb.putItem(ddbParams).promise();
             logger.info(`Successfully transferred user ${ddbParams.Item.id.S} to User dynamodb table.`);
         } catch (err) {
             logger.error(`ERROR when inserting to DynamoDB: ${err.message}`);
+            context.done(null, event);
         }
-
-        context.done(null, event);
     } else {
         // Nothing to do, the user's email ID is unknown
         logger.error("Error: user's email ID is unknown, nothing was written to DynamoDB");
         context.done(null, event);
     }
+
+    logger.info('Lambda execution complete...');
+    context.done(null, event);
 };
 
