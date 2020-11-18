@@ -1,7 +1,7 @@
 const aws = require('aws-sdk');
 
 const { getLoggerPath } = require('./utils');
-const ddb = new aws.DynamoDB({ apiVersion: '2012-10-08' });
+const ddb = new aws.DynamoDB.DocumentClient({ apiVersion: '2012-10-08' });
 
 const logger = require(getLoggerPath()).child({
     service: 'categories-explore'
@@ -22,7 +22,7 @@ exports.handler = async (event, context) => {
 
         response = {
             statusCode: 200,
-            body: categories,
+            body: JSON.stringify(categories),
         }
     } catch (err) {
         logger.error(`ERROR when retrieving from DynamoDB: ${err.message}`);
