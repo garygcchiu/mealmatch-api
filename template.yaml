@@ -1,9 +1,9 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: >
-  Restauranto-api
+  MealMatch.io API
 
-  AWS SAM CloudFormation Stack for Restauranto API
+  AWS SAM CloudFormation Stack for MealMatch.io's API
 
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
@@ -68,6 +68,7 @@ Resources:
               - ssm:GetParameter
             Resource: '*'
 
+  # Runs from a Cognito Post Confirmation trigger to transfer users from Cognito User Pool to DynamoDB
   UsersCognitoPostConfirmationFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -86,6 +87,69 @@ Resources:
             Effect: Allow
             Action:
               - dynamodb:*
+            Resource: 'arn:aws:dynamodb:us-east-1:268394913050:table/User'
+
+  CategoriesExploreFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: src/categories/explore/
+      Handler: index.handler
+      Runtime: nodejs12.x
+      Events:
+        Explore:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            Path: /categories/explore
+            RestApiId: !Ref MealMatchAPIGateway
+            Method: get
+      Layers:
+        - !Ref UtilsLayer
+      Environment:
+        Variables:
+          NODE_ENV: !Ref Env
+          CATEGORY_TABLE: Category
+      Policies:
+        - Statement:
+          - Sid: DynamoDBCategoriesTablePowerUser
+            Effect: Allow
+            Action:
+            - dynamodb:Scan
+            Resource: 'arn:aws:dynamodb:us-east-1:268394913050:table/Category'
+
+  UsersAppetiteFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/users/appetite/
+      Handler: index.handler
+      Runtime: nodejs12.x
+      Events:
+        GetUserAppetite:
+          Type: Api
+          Properties:
+            Path: /users/appetite
+            RestApiId: !Ref MealMatchAPIGateway
+            Method: get
+        EditUserAppetite:
+          Type: Api
+          Properties:
+            Path: /users/appetite
+            RestApiId: !Ref MealMatchAPIGateway
+            Method: post
+      Layers:
+        - !Ref UtilsLayer
+      Environment:
+        Variables:
+          NODE_ENV: !Ref Env
+          USER_TABLE: User
+      Policies:
+        - Statement:
+          - Sid: DynamoDBUserTablePowerUser
+            Effect: Allow
+            Action:
+              - dynamodb:GetItem
+              - dynamodb:GetRecords
+              - dynamodb:PutItem
+              - dynamodb:UpdateItem
             Resource: 'arn:aws:dynamodb:us-east-1:268394913050:table/User'
 
   ########################
@@ -171,7 +235,7 @@ Outputs:
   # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
   # Find out more about other implicit resources you can reference within SAM
   # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
-  SampleApi:
+  PlacesApi:
     Description: "API Gateway endpoint URL for Prod stage for Places endpoint"
     Value: !Sub "https://${MealMatchAPIGateway}.execute-api.${AWS::Region}.amazonaws.com/Prod/places/"
   PlacesFunction:
