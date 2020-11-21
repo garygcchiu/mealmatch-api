@@ -178,6 +178,7 @@ Resources:
             Action:
               - dynamodb:GetItem
               - dynamodb:GetRecords
+              - dynamodb:Scan
             Resource: 'arn:aws:dynamodb:us-east-1:268394913050:table/User'
 
   UsersGetInfoFunction:
@@ -313,9 +314,21 @@ Resources:
       AttributeDefinitions:
         - AttributeName: id
           AttributeType: S
+        - AttributeName: display_username
+          AttributeType: S
       KeySchema:
         - AttributeName: id
           KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: gsiDisplayUsername
+          KeySchema:
+            - AttributeName: display_username
+              KeyType: HASH
+          Projection:
+            ProjectionType: KEYS_ONLY
+          ProvisionedThroughput:
+            ReadCapacityUnits: 5
+            WriteCapacityUnits: 5
 
 Outputs:
   # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function

@@ -8,8 +8,9 @@ const logger = require(getLoggerPath()).child({
 });
 
 exports.handler = async (event, context) => {
-    const { path = '', queryStringParameters: queryStringParams } = event;
+    const { queryStringParameters } = event;
 
+    const { query } = queryStringParameters;
     const userTable = process.env.USER_TABLE;
     const region = process.env.AWS_REGION;
     aws.config.update({ region: region });
@@ -20,34 +21,38 @@ exports.handler = async (event, context) => {
         userSub = event.requestContext.authorizer.claims.sub;
     } catch (err) {
         logger.error('Received error trying to get user sub:', { err });
-        userSub = 'a1357cbb-1c1f-47c9-8862-9b909ff04cfd';
-        // return {
-        //     statusCode: 500,
-        //     body: JSON.stringify('Error retrieving user sub'),
-        // };
+        return {
+            statusCode: 500,
+            body: JSON.stringify('Error retrieving user sub'),
+        };
     }
 
-    // call DynamoDB to retrieve user's friendslist
-    let userFollowing;
+    let users = [];
+
+    // call DynamoDB
     try {
         const ddbResponse = await ddb
-            .get({
+            .scan({
                 TableName: userTable,
-                Key: { id: userSub },
-                AttributesToGet: ['following'],
+                IndexName: 'gsiDisplayUsername',
+                FilterExpression: `contains (#display_username, :query)`,
+                ExpressionAttributeNames: {
+                    '#display_username': 'display_username',
+                },
+                ExpressionAttributeValues: { ':query': query },
             })
             .promise();
-        logger.info(`Successfully retrieved following from the table.`);
-
-        userFollowing = ddbResponse.Item.following || [];
+        users = ddbResponse.Items || [];
+        logger.info(`Successfully received user info`, {
+            ddbResponse: ddbResponse.Items,
+        });
     } catch (err) {
-        logger.error(`ERROR when retrieving from DynamoDB: ${err.message}`);
-        userFollowing = [];
+        logger.error(`ERROR reading from DynamoDB: ${err.message}`);
+        return {
+            statusCode: 500,
+            body: err.message,
+        };
     }
-
-    console.log(`user ${userSub}'s following `, userFollowing);
-
-    const users = [];
 
     return {
         statusCode: 200,

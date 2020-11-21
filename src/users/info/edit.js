@@ -36,10 +36,19 @@ exports.handler = async (event, context) => {
     const updateParams = {
         TableName: usersTable,
         Key: { id: userSub },
-        UpdateExpression: 'set display_username = :a',
-        ExpressionAttributeValues: {
-            ':a': updateObj.display_username,
-        },
+        UpdateExpression: updateObj.set_following
+            ? 'set following = :sf'
+            : updateObj.add_following
+            ? 'set following = list_append(if_not_exists(following, :empty_list), :af)'
+            : 'set display_username = if_not_exists(display_username, :a),',
+        ExpressionAttributeValues: updateObj.set_following
+            ? { ':sf': updateObj.set_following }
+            : updateObj.add_following
+            ? {
+                  ':af': updateObj.add_following,
+                  ':empty_list': [],
+              }
+            : { ':a': updateObj.display_username },
         ReturnValues: 'UPDATED_NEW',
     };
 
