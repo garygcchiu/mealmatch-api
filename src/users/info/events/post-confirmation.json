@@ -1,0 +1,12 @@
+{
+  "userName": "johnnysmith",
+  "request": {
+    "userAttributes": {
+      "email": "exampleuser@example.com",
+      "email_verified": true,
+      "name": "Johnny Smith",
+      "sub": "abcdevfefe-1232132-cofeve"
+    }
+  },
+  "response": {}
+}

@@ -1,0 +1,17 @@
+{
+    "name": "search-lambda",
+    "version": "0.0.1",
+    "private": true,
+    "description": "Lambda function for search endpoint",
+    "main": "index.js",
+    "author": "Gary Chiu",
+    "dependencies": {
+        "aws-sdk": "^2.795.0"
+    },
+    "devDependencies": {
+        "jest": "^24.7.1"
+    },
+    "scripts": {
+        "test": "jest"
+    }
+}

@@ -4,16 +4,21 @@ const { getLoggerPath } = require('./utils');
 const ddb = new aws.DynamoDB.DocumentClient({ apiVersion: '2012-10-08' });
 
 const logger = require(getLoggerPath()).child({
-    service: 'user-appetite'
+    service: 'user-appetite',
 });
 
 const MODES = {
     GET: 0,
     EDIT: 1,
-}
+};
 
 exports.handler = async (event, context) => {
-    const { path = '', queryStringParameters: queryStringParams, httpMethod, body } = event;
+    const {
+        path = '',
+        queryStringParameters: queryStringParams,
+        httpMethod,
+        body,
+    } = event;
     const MODE = httpMethod === 'GET' ? MODES.GET : MODES.EDIT;
 
     const tableName = process.env.USER_TABLE;
@@ -30,7 +35,7 @@ exports.handler = async (event, context) => {
         logger.error('Received error trying to get user sub:', { err });
         return {
             statusCode: 500,
-            body: JSON.stringify('Error retrieving user sub')
+            body: JSON.stringify('Error retrieving user sub'),
         };
     }
 
@@ -41,33 +46,39 @@ exports.handler = async (event, context) => {
         case MODES.GET:
             try {
                 const ddbResponse = await ddb
-                    .get({ TableName: tableName, Key: { "id": userSub }, AttributesToGet: ['appetite'] })
+                    .get({
+                        TableName: tableName,
+                        Key: { id: userSub },
+                        AttributesToGet: ['appetite'],
+                    })
                     .promise();
-                logger.info(`Successfully retrieved user appetite from the table.`);
+                logger.info(
+                    `Successfully retrieved user appetite from the table.`
+                );
 
                 userAppetite = ddbResponse.Item.appetite || [];
             } catch (err) {
-                logger.error(`ERROR when retrieving from DynamoDB: ${err.message}`);
+                logger.error(
+                    `ERROR when retrieving from DynamoDB: ${err.message}`
+                );
                 userAppetite = [];
             }
             break;
         case MODES.EDIT:
-            logger.info('Setting appetite to ', { appetite: JSON.parse(body) })
+            logger.info('Setting appetite to ', { appetite: JSON.parse(body) });
 
             const updateParams = {
                 TableName: tableName,
-                Key: { "id": userSub },
-                UpdateExpression: "set appetite = :a",
+                Key: { id: userSub },
+                UpdateExpression: 'set appetite = :a',
                 ExpressionAttributeValues: {
-                    ":a": JSON.parse(body) || [],
+                    ':a': JSON.parse(body) || [],
                 },
-                ReturnValues: "UPDATED_NEW"
+                ReturnValues: 'UPDATED_NEW',
             };
 
             try {
-                const ddbResponse = await ddb
-                    .update(updateParams)
-                    .promise();
+                const ddbResponse = await ddb.update(updateParams).promise();
                 logger.info(`Edited user appetite in the table`);
 
                 userAppetite = ddbResponse.Attributes.appetite || [];
@@ -77,11 +88,11 @@ exports.handler = async (event, context) => {
             }
             break;
         default:
-            userAppetite = []
+            userAppetite = [];
     }
 
     return {
         statusCode: 200,
-        body: JSON.stringify(userAppetite)
+        body: JSON.stringify(userAppetite),
     };
 };

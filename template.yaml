@@ -152,6 +152,92 @@ Resources:
               - dynamodb:UpdateItem
             Resource: 'arn:aws:dynamodb:us-east-1:268394913050:table/User'
 
+  SearchFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/search/
+      Handler: index.handler
+      Runtime: nodejs12.x
+      Events:
+        Search:
+          Type: Api
+          Properties:
+            Path: /search
+            RestApiId: !Ref MealMatchAPIGateway
+            Method: get
+      Layers:
+        - !Ref UtilsLayer
+      Environment:
+        Variables:
+          NODE_ENV: !Ref Env
+          USER_TABLE: User
+      Policies:
+        - Statement:
+          - Sid: DynamoDBUserTablePowerUser
+            Effect: Allow
+            Action:
+              - dynamodb:GetItem
+              - dynamodb:GetRecords
+            Resource: 'arn:aws:dynamodb:us-east-1:268394913050:table/User'
+
+  UsersGetInfoFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/users/info/
+      Handler: get.handler
+      Runtime: nodejs12.x
+      Events:
+        Fetch:
+          Type: Api
+          Properties:
+            Path: /users/info
+            RestApiId: !Ref MealMatchAPIGateway
+            Method: get
+      Layers:
+        - !Ref UtilsLayer
+      Environment:
+        Variables:
+          NODE_ENV: !Ref Env
+          USERS_TABLE: User
+      Policies:
+        - Statement:
+          - Sid: DynamoDBUserTablePowerUser
+            Effect: Allow
+            Action:
+              - dynamodb:GetItem
+              - dynamodb:GetRecords
+            Resource: 'arn:aws:dynamodb:us-east-1:268394913050:table/User'
+
+  UsersEditInfoFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/users/info/
+      Handler: edit.handler
+      Runtime: nodejs12.x
+      Events:
+        Fetch:
+          Type: Api
+          Properties:
+            Path: /users/info
+            RestApiId: !Ref MealMatchAPIGateway
+            Method: post
+      Layers:
+        - !Ref UtilsLayer
+      Environment:
+        Variables:
+          NODE_ENV: !Ref Env
+          USERS_TABLE: User
+      Policies:
+        - Statement:
+          - Sid: DynamoDBUserTablePowerUser
+            Effect: Allow
+            Action:
+              - dynamodb:GetItem
+              - dynamodb:GetRecords
+              - dynamodb:PutItem
+              - dynamodb:UpdateItem
+            Resource: 'arn:aws:dynamodb:us-east-1:268394913050:table/User'
+
   ########################
   #
   # API Gateway
@@ -166,7 +252,7 @@ Resources:
         DefaultAuthorizer: MealMatchCognitoAuthorizer
         Authorizers:
           MealMatchCognitoAuthorizer:
-            UserPoolArn: '{{resolve:ssm:MealMatchCognitoUserPoolArn:1}}'
+            UserPoolArn: '{{resolve:ssm:MealMatchCognitoUserPoolArn:3}}'
 
   ########################
   #
