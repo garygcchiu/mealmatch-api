@@ -31,7 +31,7 @@ exports.handler = async (event, context) => {
         };
     }
 
-    // call DynamoDB
+    // call DynamoDB to add to user's following or display_username
     let userInfo;
     const updateParams = {
         TableName: usersTable,

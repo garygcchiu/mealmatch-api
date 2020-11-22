@@ -123,7 +123,7 @@ Resources:
       Handler: index.handler
       Runtime: nodejs12.x
       Events:
-        GetUserAppetite:
+        GetMutualAppetite:
           Type: Api
           Properties:
             Path: /users/appetite
@@ -151,6 +151,11 @@ Resources:
               - dynamodb:PutItem
               - dynamodb:UpdateItem
             Resource: 'arn:aws:dynamodb:us-east-1:268394913050:table/User'
+          - Sid: DynamoDBUserAppetiteGSIQueryUser
+            Effect: Allow
+            Action:
+              - dynamodb:Query
+            Resource: 'arn:aws:dynamodb:us-east-1:268394913050:table/User/index/gsiUserAppetite'
 
   SearchFunction:
     Type: AWS::Serverless::Function
@@ -326,6 +331,17 @@ Resources:
               KeyType: HASH
           Projection:
             ProjectionType: KEYS_ONLY
+          ProvisionedThroughput:
+            ReadCapacityUnits: 5
+            WriteCapacityUnits: 5
+        - IndexName: gsiUserAppetite
+          KeySchema:
+            - AttributeName: display_username
+              KeyType: HASH
+          Projection:
+            NonKeyAttributes:
+              - appetite
+            ProjectionType: INCLUDE
           ProvisionedThroughput:
             ReadCapacityUnits: 5
             WriteCapacityUnits: 5

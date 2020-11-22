@@ -8,7 +8,7 @@ const logger = require(getLoggerPath()).child({
 });
 
 const MODES = {
-    GET: 0,
+    GET_MUTUAL: 0,
     EDIT: 1,
 };
 
@@ -19,56 +19,83 @@ exports.handler = async (event, context) => {
         httpMethod,
         body,
     } = event;
-    const MODE = httpMethod === 'GET' ? MODES.GET : MODES.EDIT;
+    const MODE = httpMethod === 'GET' ? MODES.GET_MUTUAL : MODES.EDIT;
 
-    const tableName = process.env.USER_TABLE;
+    const usersTable = process.env.USER_TABLE;
     const region = process.env.AWS_REGION;
     aws.config.update({ region: region });
 
-    logger.info(`Processing ${httpMethod} request at ${path}...`);
-
-    // retrieve user sub
-    let userSub;
-    try {
-        userSub = event.requestContext.authorizer.claims.sub;
-    } catch (err) {
-        logger.error('Received error trying to get user sub:', { err });
-        return {
-            statusCode: 500,
-            body: JSON.stringify('Error retrieving user sub'),
-        };
-    }
+    logger.info(`Processing ${httpMethod} request at ${path}...`, {
+        queryStringParams,
+    });
 
     // call DynamoDB
-    let userAppetite;
-
     switch (MODE) {
-        case MODES.GET:
+        case MODES.GET_MUTUAL:
+            const { user1, user2 } = queryStringParams;
+            let mutualAppetite = [];
+
             try {
-                const ddbResponse = await ddb
-                    .get({
-                        TableName: tableName,
-                        Key: { id: userSub },
-                        AttributesToGet: ['appetite'],
+                const user1ddbResponse = await ddb
+                    .query({
+                        TableName: usersTable,
+                        IndexName: 'gsiUserAppetite',
+                        KeyConditionExpression: 'display_username = :user1',
+                        ExpressionAttributeValues: { ':user1': user1 },
                     })
                     .promise();
                 logger.info(
-                    `Successfully retrieved user appetite from the table.`
+                    `Successfully retrieved user1 appetite from the table.`,
+                    { user1ddbResponse }
                 );
 
-                userAppetite = ddbResponse.Item.appetite || [];
+                const user2ddbResponse = await ddb
+                    .query({
+                        TableName: usersTable,
+                        IndexName: 'gsiUserAppetite',
+                        KeyConditionExpression: 'display_username = :user2',
+                        ExpressionAttributeValues: { ':user2': user2 },
+                    })
+                    .promise();
+                logger.info(
+                    `Successfully retrieved user2 appetite from the table.`,
+                    { user2ddbResponse }
+                );
+
+                mutualAppetite = (
+                    user1ddbResponse.Items[0].appetite || []
+                ).filter((i) =>
+                    (user2ddbResponse.Items[0].appetite || []).includes(i)
+                );
             } catch (err) {
                 logger.error(
                     `ERROR when retrieving from DynamoDB: ${err.message}`
                 );
-                userAppetite = [];
+                mutualAppetite = [];
             }
-            break;
+
+            return {
+                statusCode: 200,
+                body: JSON.stringify(mutualAppetite),
+            };
         case MODES.EDIT:
+            let userAppetite;
             logger.info('Setting appetite to ', { appetite: JSON.parse(body) });
 
+            // retrieve user sub
+            let userSub;
+            try {
+                userSub = event.requestContext.authorizer.claims.sub;
+            } catch (err) {
+                logger.error('Received error trying to get user sub:', { err });
+                return {
+                    statusCode: 500,
+                    body: JSON.stringify('Error retrieving user sub'),
+                };
+            }
+
             const updateParams = {
-                TableName: tableName,
+                TableName: usersTable,
                 Key: { id: userSub },
                 UpdateExpression: 'set appetite = :a',
                 ExpressionAttributeValues: {
@@ -86,13 +113,15 @@ exports.handler = async (event, context) => {
                 logger.error(`ERROR when retrieving from DynamoDB`, { err });
                 userAppetite = [];
             }
-            break;
-        default:
-            userAppetite = [];
+
+            return {
+                statusCode: 200,
+                body: JSON.stringify(userAppetite),
+            };
     }
 
     return {
         statusCode: 200,
-        body: JSON.stringify(userAppetite),
+        body: JSON.stringify([]),
     };
 };
