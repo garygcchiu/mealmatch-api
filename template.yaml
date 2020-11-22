@@ -87,7 +87,7 @@ Resources:
             Effect: Allow
             Action:
               - dynamodb:*
-            Resource: 'arn:aws:dynamodb:us-east-1:268394913050:table/User'
+            Resource: !GetAtt UserTable.Arn
 
   CategoriesExploreFunction:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
@@ -150,12 +150,12 @@ Resources:
               - dynamodb:GetRecords
               - dynamodb:PutItem
               - dynamodb:UpdateItem
-            Resource: 'arn:aws:dynamodb:us-east-1:268394913050:table/User'
+            Resource: !GetAtt UserTable.Arn
           - Sid: DynamoDBUserAppetiteGSIQueryUser
             Effect: Allow
             Action:
               - dynamodb:Query
-            Resource: 'arn:aws:dynamodb:us-east-1:268394913050:table/User/index/gsiUserAppetite'
+            Resource: !Sub ${UserTable.Arn}/index/gsiUserAppetite
 
   SearchFunction:
     Type: AWS::Serverless::Function
@@ -184,7 +184,7 @@ Resources:
               - dynamodb:GetItem
               - dynamodb:GetRecords
               - dynamodb:Scan
-            Resource: 'arn:aws:dynamodb:us-east-1:268394913050:table/User'
+            Resource: !GetAtt UserTable.Arn
 
   UsersGetInfoFunction:
     Type: AWS::Serverless::Function
@@ -212,7 +212,7 @@ Resources:
             Action:
               - dynamodb:GetItem
               - dynamodb:GetRecords
-            Resource: 'arn:aws:dynamodb:us-east-1:268394913050:table/User'
+            Resource: !GetAtt UserTable.Arn
 
   UsersEditInfoFunction:
     Type: AWS::Serverless::Function
@@ -242,7 +242,76 @@ Resources:
               - dynamodb:GetRecords
               - dynamodb:PutItem
               - dynamodb:UpdateItem
-            Resource: 'arn:aws:dynamodb:us-east-1:268394913050:table/User'
+            Resource: !GetAtt UserTable.Arn
+
+  GroupInvitesSNSFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/groups/sns/
+      Handler: index.handler
+      Runtime: nodejs12.x
+      Layers:
+        - !Ref UtilsLayer
+      Environment:
+        Variables:
+          NODE_ENV: !Ref Env
+          USERS_TABLE: User
+          GROUPS_TABLE: Groups
+      Policies:
+        - Statement:
+          - Sid: DynamoDBUserTablePowerUser
+            Effect: Allow
+            Action:
+              - dynamodb:GetItem
+              - dynamodb:GetRecords
+              - dynamodb:PutItem
+              - dynamodb:UpdateItem
+            Resource: !GetAtt UserTable.Arn
+
+  CreateGroupFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/groups/edit/
+      Handler: index.handler
+      Runtime: nodejs12.x
+      Layers:
+        - !Ref UtilsLayer
+      Events:
+        Create:
+          Type: Api
+          Properties:
+            Path: /groups/create
+            RestApiId: !Ref MealMatchAPIGateway
+            Method: post
+        Edit:
+          Type: Api
+          Properties:
+            Path: /groups/edit
+            RestApiId: !Ref MealMatchAPIGateway
+            Method: post
+        Delete:
+          Type: Api
+          Properties:
+            Path: /groups/delete
+            RestApiId: !Ref MealMatchAPIGateway
+            Method: delete
+      Environment:
+        Variables:
+          NODE_ENV: !Ref Env
+          USERS_TABLE: User
+          GROUPS_TABLE: Groups
+      Policies:
+        - Statement:
+          - Sid: DynamoDBUserTablePowerUser
+            Effect: Allow
+            Action:
+              - dynamodb:GetItem
+              - dynamodb:GetRecords
+              - dynamodb:PutItem
+              - dynamodb:UpdateItem
+            Resource:
+              - !GetAtt UserTable.Arn
+              - !GetAtt GroupsTable.Arn
 
   ########################
   #
@@ -345,6 +414,41 @@ Resources:
           ProvisionedThroughput:
             ReadCapacityUnits: 5
             WriteCapacityUnits: 5
+
+  GroupsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: Groups
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+      AttributeDefinitions:
+        - AttributeName: group_id
+          AttributeType: S
+      KeySchema:
+      - AttributeName: group_id
+        KeyType: HASH
+
+  ########################
+  #
+  # SNS Topics
+  #
+  ########################
+  GroupInvitesSNSTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: GroupInvites
+      DisplayName: MealMatch.io Group Invites
+      Subscription:
+        - Endpoint: !GetAtt GroupInvitesSNSFunction.Arn
+          Protocol: lambda
+
+  GroupInvitesLambdaInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: 'lambda:InvokeFunction'
+      FunctionName: !Ref GroupInvitesSNSFunction
+      Principal: "sns.amazonaws.com"
 
 Outputs:
   # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
