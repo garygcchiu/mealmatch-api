@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "sam build; sam local start-api --env-vars local.env.json;",
     "invoke": "sam build; sam local invoke;",
-    "deployStack": "npm run setup && sam build; sam deploy --config-file samconfig.toml --config-env $ENVIRONMENT --profile restauranto-deploy; npm run postDeployStack",
+    "deployStack": "sam build; sam deploy --config-file samconfig.toml --config-env $ENVIRONMENT --profile restauranto-deploy; npm run postDeployStack",
     "deployDev": "export ENVIRONMENT=dev; npm run deployStack",
     "deployStaging": "export ENVIRONMENT=staging; npm run deployStack",
     "deployProd": "export ENVIRONMENT=prod; npm run deployStack",

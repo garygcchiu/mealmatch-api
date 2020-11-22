@@ -33,7 +33,12 @@ exports.handler = async (event, context) => {
             .get({
                 TableName: usersTable,
                 Key: { id: userSub },
-                AttributesToGet: ['display_username', 'appetite', 'following'],
+                AttributesToGet: [
+                    'display_username',
+                    'appetite',
+                    'following',
+                    'groups',
+                ],
             })
             .promise();
         userInfo = ddbResponse.Item || {};

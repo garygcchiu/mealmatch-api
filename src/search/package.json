@@ -5,9 +5,7 @@
     "description": "Lambda function for search endpoint",
     "main": "index.js",
     "author": "Gary Chiu",
-    "dependencies": {
-        "aws-sdk": "^2.795.0"
-    },
+    "dependencies": {},
     "devDependencies": {
         "jest": "^24.7.1"
     },
