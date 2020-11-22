@@ -123,7 +123,7 @@ Resources:
       Handler: index.handler
       Runtime: nodejs12.x
       Events:
-        GetUserAppetite:
+        GetMutualAppetite:
           Type: Api
           Properties:
             Path: /users/appetite
@@ -151,6 +151,98 @@ Resources:
               - dynamodb:PutItem
               - dynamodb:UpdateItem
             Resource: 'arn:aws:dynamodb:us-east-1:268394913050:table/User'
+          - Sid: DynamoDBUserAppetiteGSIQueryUser
+            Effect: Allow
+            Action:
+              - dynamodb:Query
+            Resource: 'arn:aws:dynamodb:us-east-1:268394913050:table/User/index/gsiUserAppetite'
+
+  SearchFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/search/
+      Handler: index.handler
+      Runtime: nodejs12.x
+      Events:
+        Search:
+          Type: Api
+          Properties:
+            Path: /search
+            RestApiId: !Ref MealMatchAPIGateway
+            Method: get
+      Layers:
+        - !Ref UtilsLayer
+      Environment:
+        Variables:
+          NODE_ENV: !Ref Env
+          USER_TABLE: User
+      Policies:
+        - Statement:
+          - Sid: DynamoDBUserTablePowerUser
+            Effect: Allow
+            Action:
+              - dynamodb:GetItem
+              - dynamodb:GetRecords
+              - dynamodb:Scan
+            Resource: 'arn:aws:dynamodb:us-east-1:268394913050:table/User'
+
+  UsersGetInfoFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/users/info/
+      Handler: get.handler
+      Runtime: nodejs12.x
+      Events:
+        Fetch:
+          Type: Api
+          Properties:
+            Path: /users/info
+            RestApiId: !Ref MealMatchAPIGateway
+            Method: get
+      Layers:
+        - !Ref UtilsLayer
+      Environment:
+        Variables:
+          NODE_ENV: !Ref Env
+          USERS_TABLE: User
+      Policies:
+        - Statement:
+          - Sid: DynamoDBUserTablePowerUser
+            Effect: Allow
+            Action:
+              - dynamodb:GetItem
+              - dynamodb:GetRecords
+            Resource: 'arn:aws:dynamodb:us-east-1:268394913050:table/User'
+
+  UsersEditInfoFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/users/info/
+      Handler: edit.handler
+      Runtime: nodejs12.x
+      Events:
+        Fetch:
+          Type: Api
+          Properties:
+            Path: /users/info
+            RestApiId: !Ref MealMatchAPIGateway
+            Method: post
+      Layers:
+        - !Ref UtilsLayer
+      Environment:
+        Variables:
+          NODE_ENV: !Ref Env
+          USERS_TABLE: User
+      Policies:
+        - Statement:
+          - Sid: DynamoDBUserTablePowerUser
+            Effect: Allow
+            Action:
+              - dynamodb:GetItem
+              - dynamodb:GetRecords
+              - dynamodb:PutItem
+              - dynamodb:UpdateItem
+            Resource: 'arn:aws:dynamodb:us-east-1:268394913050:table/User'
 
   ########################
   #
@@ -166,7 +258,7 @@ Resources:
         DefaultAuthorizer: MealMatchCognitoAuthorizer
         Authorizers:
           MealMatchCognitoAuthorizer:
-            UserPoolArn: '{{resolve:ssm:MealMatchCognitoUserPoolArn:1}}'
+            UserPoolArn: '{{resolve:ssm:MealMatchCognitoUserPoolArn:3}}'
 
   ########################
   #
@@ -227,9 +319,32 @@ Resources:
       AttributeDefinitions:
         - AttributeName: id
           AttributeType: S
+        - AttributeName: display_username
+          AttributeType: S
       KeySchema:
         - AttributeName: id
           KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: gsiDisplayUsername
+          KeySchema:
+            - AttributeName: display_username
+              KeyType: HASH
+          Projection:
+            ProjectionType: KEYS_ONLY
+          ProvisionedThroughput:
+            ReadCapacityUnits: 5
+            WriteCapacityUnits: 5
+        - IndexName: gsiUserAppetite
+          KeySchema:
+            - AttributeName: display_username
+              KeyType: HASH
+          Projection:
+            NonKeyAttributes:
+              - appetite
+            ProjectionType: INCLUDE
+          ProvisionedThroughput:
+            ReadCapacityUnits: 5
+            WriteCapacityUnits: 5
 
 Outputs:
   # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
