@@ -271,7 +271,7 @@ Resources:
   CreateGroupFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: src/groups/edit/
+      CodeUri: src/groups/create/
       Handler: index.handler
       Runtime: nodejs12.x
       Layers:
@@ -283,18 +283,6 @@ Resources:
             Path: /groups/create
             RestApiId: !Ref MealMatchAPIGateway
             Method: post
-        Edit:
-          Type: Api
-          Properties:
-            Path: /groups/edit
-            RestApiId: !Ref MealMatchAPIGateway
-            Method: post
-        Delete:
-          Type: Api
-          Properties:
-            Path: /groups/delete
-            RestApiId: !Ref MealMatchAPIGateway
-            Method: delete
       Environment:
         Variables:
           NODE_ENV: !Ref Env
