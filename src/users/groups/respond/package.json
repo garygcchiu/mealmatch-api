@@ -1,0 +1,13 @@
+{
+  "name": "users-groups-respond",
+  "version": "1.0.0",
+  "description": "Lambda function for users/groups/respond endpoint",
+  "main": "index.js",
+  "author": "Gary Chiu",
+  "scripts": {
+    "test": "mocha tests/unit"
+  },
+  "dependencies": {
+  },
+  "devDependencies": {}
+}
