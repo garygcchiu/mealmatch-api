@@ -73,8 +73,12 @@ exports.handler = async (event, context) => {
         TableName: usersTable,
         Key: { id: userSub },
         UpdateExpression: `
-            set groups = list_append(if_not_exists(groups, :empty_list), :g)
-            remove group_invites[${groupInviteIndex}]
+           ${
+               accept
+                   ? 'set groups = list_append(if_not_exists(groups, :empty_list), :g)'
+                   : ''
+           }
+           remove group_invites[${groupInviteIndex}]
         `,
         ExpressionAttributeValues: {
             ':g': [{ id: group_id, name: group_name }],
@@ -130,8 +134,12 @@ exports.handler = async (event, context) => {
         TableName: groupsTable,
         Key: { group_id: group_id },
         UpdateExpression: `
-            set members = list_append(if_not_exists(members, :empty_list), :m)
-                remove invited_members[${invitedMemberIndex}]
+            ${
+                accept
+                    ? 'set members = list_append(if_not_exists(members, :empty_list), :m)'
+                    : ''
+            }
+            remove invited_members[${invitedMemberIndex}]
         `,
         ExpressionAttributeValues: {
             ':m': [
