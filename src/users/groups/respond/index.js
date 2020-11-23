@@ -80,10 +80,12 @@ exports.handler = async (event, context) => {
            }
            remove group_invites[${groupInviteIndex}]
         `,
-        ExpressionAttributeValues: {
-            ':g': [{ id: group_id, name: group_name }],
-            ':empty_list': [],
-        },
+        ...(accept && {
+            ExpressionAttributeValues: {
+                ':g': [{ id: group_id, name: group_name }],
+                ':empty_list': [],
+            },
+        }),
         ReturnValues: 'ALL_NEW',
     };
 
@@ -141,15 +143,17 @@ exports.handler = async (event, context) => {
             }
             remove invited_members[${invitedMemberIndex}]
         `,
-        ExpressionAttributeValues: {
-            ':m': [
-                {
-                    user_id: userSub,
-                    display_username: userInfo.display_username,
-                },
-            ],
-            ':empty_list': [],
-        },
+        ...(accept && {
+            ExpressionAttributeValues: {
+                ':empty_list': [],
+                ':m': [
+                    {
+                        user_id: userSub,
+                        display_username: userInfo.display_username,
+                    },
+                ],
+            },
+        }),
         ReturnValues: 'ALL_NEW',
     };
 
