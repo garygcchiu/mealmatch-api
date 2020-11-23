@@ -38,6 +38,7 @@ exports.handler = async (event, context) => {
                     'appetite',
                     'following',
                     'groups',
+                    'group_invites',
                 ],
             })
             .promise();

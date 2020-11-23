@@ -266,7 +266,9 @@ Resources:
               - dynamodb:GetRecords
               - dynamodb:PutItem
               - dynamodb:UpdateItem
-            Resource: !GetAtt UserTable.Arn
+            Resource:
+              - !GetAtt UserTable.Arn
+              - !GetAtt GroupsTable.Arn
 
   CreateGroupFunction:
     Type: AWS::Serverless::Function
@@ -301,7 +303,99 @@ Resources:
               - !GetAtt UserTable.Arn
               - !GetAtt GroupsTable.Arn
 
-  ########################
+  ViewGroupFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/groups/view/
+      Handler: index.handler
+      Runtime: nodejs12.x
+      Layers:
+        - !Ref UtilsLayer
+      Events:
+        Create:
+          Type: Api
+          Properties:
+            Path: /groups/view
+            RestApiId: !Ref MealMatchAPIGateway
+            Method: get
+      Environment:
+        Variables:
+          NODE_ENV: !Ref Env
+          USERS_TABLE: User
+          GROUPS_TABLE: Groups
+      Policies:
+        - Statement:
+          - Sid: DynamoDBUserGroupsTableGetter
+            Effect: Allow
+            Action:
+              - dynamodb:GetItem
+              - dynamodb:GetRecords
+            Resource:
+              - !GetAtt UserTable.Arn
+              - !GetAtt GroupsTable.Arn
+
+  PublishSNSGroupInviteFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/groups/invite/
+      Handler: index.handler
+      Runtime: nodejs12.x
+      Layers:
+        - !Ref UtilsLayer
+      Events:
+        Invite:
+          Type: Api
+          Properties:
+            Path: /groups/invite
+            RestApiId: !Ref MealMatchAPIGateway
+            Method: post
+      Environment:
+        Variables:
+          NODE_ENV: !Ref Env
+          GROUP_INVITES_SNS_TOPIC_ARN: !Ref GroupInvitesSNSTopic
+      Policies:
+        - Statement:
+          - Sid: GroupInvitesSNSPublisher
+            Effect: Allow
+            Action:
+              - SNS:Publish
+            Resource:
+              - !Ref GroupInvitesSNSTopic
+
+  UsersGroupsRespondFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/users/groups/respond/
+      Handler: index.handler
+      Runtime: nodejs12.x
+      Layers:
+        - !Ref UtilsLayer
+      Events:
+        RespondInvite:
+          Type: Api
+          Properties:
+            Path: /users/groups/respond
+            RestApiId: !Ref MealMatchAPIGateway
+            Method: post
+      Environment:
+        Variables:
+          NODE_ENV: !Ref Env
+          USERS_TABLE: User
+          GROUPS_TABLE: Groups
+      Policies:
+        - Statement:
+          - Sid: DynamoDBUserGroupsTablePowerUser
+            Effect: Allow
+            Action:
+              - dynamodb:GetItem
+              - dynamodb:GetRecords
+              - dynamodb:PutItem
+              - dynamodb:UpdateItem
+            Resource:
+              - !GetAtt UserTable.Arn
+              - !GetAtt GroupsTable.Arn
+
+    ########################
   #
   # API Gateway
   #

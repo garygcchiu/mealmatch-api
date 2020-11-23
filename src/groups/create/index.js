@@ -38,12 +38,12 @@ exports.handler = async (event, context) => {
         Item: {
             group_id: groupId,
             name: group_name,
-            members: [user_display_username],
+            members: [
+                { display_username: user_display_username, user_id: userSub },
+            ],
         },
         ReturnValues: 'ALL_OLD',
     };
-
-    logger.info('params = ', { params });
 
     try {
         await ddb.put(params).promise();
