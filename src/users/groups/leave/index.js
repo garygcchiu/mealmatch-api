@@ -53,7 +53,7 @@ exports.handler = async (event, context) => {
         };
     }
 
-    // update user with new groups [] and group_invites []
+    // update user with new groups []
     const groupIndex = userInfo.groups.findIndex((g) => g.id === group_id);
 
     logger.info('users remove groupIndex = ', { groupIndex });
@@ -83,7 +83,6 @@ exports.handler = async (event, context) => {
         };
     }
 
-    // update group to remove user from members []
     // get group info
     let groupInfo;
     try {
@@ -91,7 +90,7 @@ exports.handler = async (event, context) => {
             .get({
                 TableName: groupsTable,
                 Key: { id: group_id },
-                AttributesToGet: ['members'],
+                AttributesToGet: ['members', 'invited_members'],
             })
             .promise();
         groupInfo = ddbResponse.Item || {};
@@ -104,32 +103,145 @@ exports.handler = async (event, context) => {
         };
     }
 
-    // update user with new groups [] and group_invites []
-    const memberIndex = groupInfo.members.findIndex((m) => m.id === userSub);
-    logger.info('invitedMemberIndex = ', { memberIndex });
+    // if user is admin: remove group from all of the members' groups [] and group_invites []
+    const isAdminLeaving =
+        groupInfo.members.filter((m) => m.is_admin)[0].id === userSub;
 
-    let ddbGroupMembersUpdateRes;
-    const groupParams = {
-        TableName: groupsTable,
-        Key: { id: group_id },
-        UpdateExpression: `
-            remove members[${memberIndex}]
-        `,
-        ReturnValues: 'ALL_NEW',
-    };
+    if (isAdminLeaving) {
+        logger.info(
+            'Admin left group, need to remove group, group_invites from all users, delete group'
+        );
 
-    try {
-        const ddbResponse = await ddb.update(groupParams).promise();
-        ddbGroupMembersUpdateRes = ddbResponse.Item || {};
-        logger.info(`Successfully updated groups members`, {
-            ddbGroupMembersUpdateRes,
-        });
-    } catch (err) {
-        logger.error(`ERROR reading from DynamoDB: ${err.message}`);
-        return {
-            statusCode: 500,
-            body: err.message,
+        for (const member of [
+            ...groupInfo.members.filter((m) => !m.is_admin),
+            ...(groupInfo.invited_members || []),
+        ]) {
+            // get user info
+            let memberInfo;
+            try {
+                const ddbResponse = await ddb
+                    .get({
+                        TableName: usersTable,
+                        Key: { id: member.id },
+                        AttributesToGet: [
+                            'groups',
+                            'group_invites',
+                            'display_username',
+                        ],
+                    })
+                    .promise();
+                memberInfo = ddbResponse.Item || {};
+                logger.info(`Successfully received member info`, {
+                    memberInfo,
+                });
+            } catch (err) {
+                logger.error(`ERROR reading from DynamoDB: ${err.message}`);
+                return {
+                    statusCode: 500,
+                    body: err.message,
+                };
+            }
+
+            // update user with new groups []
+            const groupIndex = (memberInfo.groups || []).findIndex(
+                (g) => g.id === group_id
+            );
+            const groupInviteIndex = (memberInfo.group_invites || []).findIndex(
+                (gi) => gi.id === group_id
+            );
+
+            logger.info('member remove groupIndex = ', { groupIndex });
+            logger.info('member remove groupInviteIndex = ', {
+                groupInviteIndex,
+            });
+
+            let ddbMemberUpdateRes;
+            const removeParams = {
+                TableName: usersTable,
+                Key: { id: member.id },
+                UpdateExpression: `
+                    remove ${groupIndex >= 0 ? `groups[${groupIndex}]` : ''}  
+                    ${
+                        groupInviteIndex >= 0
+                            ? `group_invites[${groupInviteIndex}]`
+                            : ''
+                    }`,
+                ReturnValues: 'ALL_NEW',
+            };
+
+            try {
+                const ddbResponse = await ddb.update(removeParams).promise();
+                logger.info('member update ddbResponse = ', {
+                    ddbResponse,
+                });
+                ddbMemberUpdateRes = ddbResponse.Item || {};
+                logger.info(`Successfully updated members' groups `, {
+                    ddbUserGroupsUpdateRes,
+                });
+            } catch (err) {
+                logger.error(`ERROR reading from DynamoDB: ${err.message}`);
+                return {
+                    statusCode: 500,
+                    body: err.message,
+                };
+            }
+        }
+
+        // delete group
+        logger.info('Deleting group...');
+
+        const deleteParams = {
+            TableName: groupsTable,
+            Key: { id: group_id },
+            ConditionalExpression: 'size (members) = 1',
         };
+
+        let ddbDeleteRes;
+        try {
+            const ddbResponse = await ddb.delete(deleteParams).promise();
+            ddbDeleteRes = ddbResponse.Item || {};
+            logger.info(`Successfully deleted group`, {
+                ddbResponse,
+            });
+        } catch (err) {
+            logger.error(`ERROR deleting from DynamoDB: ${err.message}`);
+            return {
+                statusCode: 500,
+                body: err.message,
+            };
+        }
+    } else {
+        logger.info('Leaving user is not admin, removing user from group');
+
+        // remove user from group
+        const memberIndex = groupInfo.members.findIndex(
+            (m) => m.id === userSub
+        );
+        logger.info('invitedMemberIndex = ', { memberIndex });
+
+        let ddbGroupMembersUpdateRes;
+        const groupParams = {
+            TableName: groupsTable,
+            Key: { id: group_id },
+            UpdateExpression: `
+                remove members[${memberIndex}]
+            `,
+            ReturnValues: 'ALL_NEW',
+        };
+
+        try {
+            const ddbResponse = await ddb.update(groupParams).promise();
+            ddbGroupMembersUpdateRes = ddbResponse.Item || {};
+            logger.info(`Successfully updated groups members`, {
+                ddbGroupMembersUpdateRes,
+            });
+        } catch (err) {
+            logger.error(`ERROR reading from DynamoDB: ${err.message}`);
+            return {
+                statusCode: 500,
+                body: err.message,
+            };
+        }
     }
 
     logger.info('Lambda execution complete...');
