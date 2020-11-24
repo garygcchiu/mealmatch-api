@@ -395,6 +395,39 @@ Resources:
               - !GetAtt UserTable.Arn
               - !GetAtt GroupsTable.Arn
 
+  UsersGroupsLeaveFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/users/groups/leave/
+      Handler: index.handler
+      Runtime: nodejs12.x
+      Layers:
+        - !Ref UtilsLayer
+      Events:
+        RespondInvite:
+          Type: Api
+          Properties:
+            Path: /users/groups/leave
+            RestApiId: !Ref MealMatchAPIGateway
+            Method: post
+      Environment:
+        Variables:
+          NODE_ENV: !Ref Env
+          USERS_TABLE: User
+          GROUPS_TABLE: Groups
+      Policies:
+        - Statement:
+          - Sid: DynamoDBUserGroupsTablePowerUser
+            Effect: Allow
+            Action:
+              - dynamodb:GetItem
+              - dynamodb:GetRecords
+              - dynamodb:PutItem
+              - dynamodb:UpdateItem
+            Resource:
+              - !GetAtt UserTable.Arn
+              - !GetAtt GroupsTable.Arn
+
     ########################
   #
   # API Gateway
@@ -505,10 +538,10 @@ Resources:
         ReadCapacityUnits: 5
         WriteCapacityUnits: 5
       AttributeDefinitions:
-        - AttributeName: group_id
+        - AttributeName: id
           AttributeType: S
       KeySchema:
-      - AttributeName: group_id
+      - AttributeName: id
         KeyType: HASH
 
   ########################
