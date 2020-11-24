@@ -35,11 +35,15 @@ exports.handler = async (event, context) => {
             .scan({
                 TableName: userTable,
                 IndexName: 'gsiDisplayUsername',
-                FilterExpression: `contains (#display_username, :query)`,
+                FilterExpression: `contains (#display_username, :query) and #id <> :userSub`,
                 ExpressionAttributeNames: {
                     '#display_username': 'display_username',
+                    '#id': 'id',
                 },
-                ExpressionAttributeValues: { ':query': query },
+                ExpressionAttributeValues: {
+                    ':query': query,
+                    ':userSub': userSub,
+                },
             })
             .promise();
         users = ddbResponse.Items || [];

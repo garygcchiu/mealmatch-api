@@ -63,7 +63,7 @@ exports.handler = async (event, context) => {
 
     // update user with new groups [] and group_invites []
     const groupInviteIndex = userInfo.group_invites.findIndex(
-        (gi) => gi.group_id === group_id
+        (gi) => gi.id === group_id
     );
 
     logger.info('users remove groupInviteIndex = ', { groupInviteIndex });
@@ -111,7 +111,7 @@ exports.handler = async (event, context) => {
         const ddbResponse = await ddb
             .get({
                 TableName: groupsTable,
-                Key: { group_id: group_id },
+                Key: { id: group_id },
                 AttributesToGet: ['members', 'invited_members'],
             })
             .promise();
@@ -127,14 +127,14 @@ exports.handler = async (event, context) => {
 
     // update user with new groups [] and group_invites []
     const invitedMemberIndex = groupInfo.invited_members.findIndex(
-        (im) => im.user_id === userSub
+        (im) => im.id === userSub
     );
     logger.info('invitedMemberIndex = ', { invitedMemberIndex });
 
     let ddbGroupMembersUpdateRes;
     const groupParams = {
         TableName: groupsTable,
-        Key: { group_id: group_id },
+        Key: { id: group_id },
         UpdateExpression: `
             ${
                 accept
@@ -148,7 +148,7 @@ exports.handler = async (event, context) => {
                 ':empty_list': [],
                 ':m': [
                     {
-                        user_id: userSub,
+                        id: userSub,
                         display_username: userInfo.display_username,
                     },
                 ],

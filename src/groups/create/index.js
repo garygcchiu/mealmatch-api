@@ -36,10 +36,14 @@ exports.handler = async (event, context) => {
     const params = {
         TableName: groupsTable,
         Item: {
-            group_id: groupId,
+            id: groupId,
             name: group_name,
             members: [
-                { display_username: user_display_username, user_id: userSub },
+                {
+                    display_username: user_display_username,
+                    id: userSub,
+                    is_admin: true,
+                },
             ],
         },
         ReturnValues: 'ALL_OLD',
@@ -47,7 +51,7 @@ exports.handler = async (event, context) => {
 
     try {
         await ddb.put(params).promise();
-        logger.info(`Successfully created group `);
+        logger.info(`Successfully created group`);
     } catch (err) {
         logger.error(`ERROR inserting to DynamoDB: ${err.message}`);
         return {

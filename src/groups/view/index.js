@@ -25,7 +25,7 @@ exports.handler = async (event, context) => {
         const ddbResponse = await ddb
             .get({
                 TableName: groupsTable,
-                Key: { group_id: groupId },
+                Key: { id: groupId },
                 AttributesToGet: ['members', 'name', 'invited_members'],
             })
             .promise();

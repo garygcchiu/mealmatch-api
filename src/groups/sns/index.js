@@ -31,7 +31,7 @@ exports.handler = async (event, context, callback) => {
         UpdateExpression:
             'set group_invites = list_append(if_not_exists(group_invites, :empty_list), :g)',
         ExpressionAttributeValues: {
-            ':g': [{ group_id, group_name }],
+            ':g': [{ id: group_id, name: group_name }],
             ':empty_list': [],
         },
         ReturnValues: 'UPDATED_NEW',
@@ -66,15 +66,14 @@ exports.handler = async (event, context, callback) => {
     }
 
     // add user to group's invited_members []
-    // add group_id to user's group_invites []
     let ddbInvitedRes;
     const invitedParams = {
         TableName: groupsTable,
-        Key: { group_id: group_id },
+        Key: { id: group_id },
         UpdateExpression:
             'set invited_members = list_append(if_not_exists(invited_members, :empty_list), :im)',
         ExpressionAttributeValues: {
-            ':im': [{ user_id: user_id, display_username: displayUsername }],
+            ':im': [{ id: user_id, display_username: displayUsername }],
             ':empty_list': [],
         },
         ReturnValues: 'UPDATED_NEW',
