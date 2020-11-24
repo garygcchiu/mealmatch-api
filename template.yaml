@@ -429,6 +429,39 @@ Resources:
               - !GetAtt UserTable.Arn
               - !GetAtt GroupsTable.Arn
 
+  GroupsKickUserFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/groups/kick/
+      Handler: index.handler
+      Runtime: nodejs12.x
+      Layers:
+        - !Ref UtilsLayer
+      Events:
+        RespondInvite:
+          Type: Api
+          Properties:
+            Path: /groups/kick
+            RestApiId: !Ref MealMatchAPIGateway
+            Method: post
+      Environment:
+        Variables:
+          NODE_ENV: !Ref Env
+          USERS_TABLE: User
+          GROUPS_TABLE: Groups
+      Policies:
+        - Statement:
+          - Sid: DynamoDBUserGroupsTablePowerUser
+            Effect: Allow
+            Action:
+              - dynamodb:GetItem
+              - dynamodb:GetRecords
+              - dynamodb:PutItem
+              - dynamodb:UpdateItem
+            Resource:
+              - !GetAtt UserTable.Arn
+              - !GetAtt GroupsTable.Arn
+
     ########################
   #
   # API Gateway
