@@ -221,7 +221,7 @@ Resources:
       Handler: edit.handler
       Runtime: nodejs12.x
       Events:
-        Fetch:
+        EditInfo:
           Type: Api
           Properties:
             Path: /users/info
@@ -243,6 +243,75 @@ Resources:
               - dynamodb:PutItem
               - dynamodb:UpdateItem
             Resource: !GetAtt UserTable.Arn
+
+  SubmitUsernameFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/users/info/
+      Handler: submit-username.handler
+      Runtime: nodejs12.x
+      Events:
+        EditUsername:
+          Type: Api
+          Properties:
+            Path: /users/submit-username
+            RestApiId: !Ref MealMatchAPIGateway
+            Method: post
+      Layers:
+        - !Ref UtilsLayer
+      Environment:
+        Variables:
+          NODE_ENV: !Ref Env
+          USERS_TABLE: User
+          USERNAMES_TABLE: Usernames
+      Policies:
+        - Statement:
+          - Sid: DynamoDBUserUsernamesTablePowerUser
+            Effect: Allow
+            Action:
+              - dynamodb:GetItem
+              - dynamodb:GetRecords
+              - dynamodb:PutItem
+              - dynamodb:UpdateItem
+            Resource:
+              - !GetAtt UserTable.Arn
+              - !GetAtt UsernamesTable.Arn
+
+  GroupMutualAppetitesFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/groups/mutual-appetite/
+      Handler: index.handler
+      Runtime: nodejs12.x
+      Events:
+        GetMutualAppetite:
+          Type: Api
+          Properties:
+            Path: /groups/mutual-appetite
+            RestApiId: !Ref MealMatchAPIGateway
+            Method: get
+      Layers:
+        - !Ref UtilsLayer
+      Environment:
+        Variables:
+          NODE_ENV: !Ref Env
+          USERS_TABLE: User
+          GROUPS_TABLE: Groups
+      Policies:
+        - Statement:
+          - Sid: DynamoDBUserGroupsTablePowerUser
+            Effect: Allow
+            Action:
+              - dynamodb:GetItem
+              - dynamodb:GetRecords
+            Resource:
+              - !GetAtt UserTable.Arn
+              - !GetAtt GroupsTable.Arn
+          - Sid: DynamoDBUserAppetiteGSIQueryUser
+            Effect: Allow
+            Action:
+              - dynamodb:Query
+            Resource: !Sub ${UserTable.Arn}/index/gsiUserAppetite
 
   GroupInvitesSNSFunction:
     Type: AWS::Serverless::Function
@@ -462,7 +531,7 @@ Resources:
               - !GetAtt UserTable.Arn
               - !GetAtt GroupsTable.Arn
 
-    ########################
+  ########################
   #
   # API Gateway
   #
@@ -577,6 +646,20 @@ Resources:
       KeySchema:
       - AttributeName: id
         KeyType: HASH
+
+  UsernamesTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: Usernames
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+      AttributeDefinitions:
+        - AttributeName: display_username
+          AttributeType: S
+      KeySchema:
+        - AttributeName: display_username
+          KeyType: HASH
 
   ########################
   #

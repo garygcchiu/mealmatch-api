@@ -40,7 +40,7 @@ exports.handler = async (event, context) => {
             ? 'set following = :sf'
             : updateObj.add_following
             ? 'set following = list_append(if_not_exists(following, :empty_list), :af)'
-            : 'set display_username = if_not_exists(display_username, :a),',
+            : '',
         ExpressionAttributeValues: updateObj.set_following
             ? { ':sf': updateObj.set_following }
             : updateObj.add_following
@@ -48,7 +48,7 @@ exports.handler = async (event, context) => {
                   ':af': updateObj.add_following,
                   ':empty_list': [],
               }
-            : { ':a': updateObj.display_username },
+            : {},
         ReturnValues: 'UPDATED_NEW',
     };
 

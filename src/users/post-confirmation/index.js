@@ -1,7 +1,7 @@
 const aws = require('aws-sdk');
 
 const { getLoggerPath } = require('./utils');
-const ddb = new aws.DynamoDB({ apiVersion: '2012-10-08' });
+const ddb = new aws.DynamoDB.DocumentClient({ apiVersion: '2012-10-08' });
 
 const logger = require(getLoggerPath()).child({
     service: 'users-post-confirmation',
@@ -22,34 +22,26 @@ exports.handler = async (event, context) => {
         // write data to DynamoDB
         let ddbParams = {
             Item: {
-                id: { S: event.request.userAttributes.sub },
-                username: {
-                    S: event.userName || '',
-                },
-                given_name: {
-                    S: event.request.userAttributes.given_name || '',
-                },
-                family_name: {
-                    S: event.request.userAttributes.family_name || '',
-                },
-                display_username: {
-                    S:
-                        event.request.userAttributes.identities &&
-                        event.request.userAttributes.identities.length > 0
-                            ? '' // Social Sign In
-                            : event.userName, // Basic Auth
-                },
-                email: { S: event.request.userAttributes.email },
-                created_at: { S: date.toISOString() },
+                id: event.request.userAttributes.sub,
+                username: event.userName || '',
+                given_name: event.request.userAttributes.given_name || '',
+                family_name: event.request.userAttributes.family_name || '',
+                display_username:
+                    (event.request.userAttributes.identities &&
+                        event.request.userAttributes.identities.length > 0 &&
+                        event.userName) ||
+                    '', // Social Sign In -- temporarily use username, Basic Auth is fine
+                email: event.request.userAttributes.email,
+                created_at: date.toISOString(),
             },
             TableName: tableName,
         };
 
         // call DynamoDB
         try {
-            await ddb.putItem(ddbParams).promise();
+            await ddb.put(ddbParams).promise();
             logger.info(
-                `Successfully transferred user ${ddbParams.Item.id.S} to User dynamodb table.`
+                `Successfully transferred user ${ddbParams.Item.id} to User dynamodb table.`
             );
         } catch (err) {
             logger.error(`ERROR when inserting to DynamoDB: ${err.message}`);

@@ -7,14 +7,14 @@ const logger = require(getLoggerPath()).child({
     service: 'groups-invite',
 });
 
-// POST: body expects { group_id, user_id }
+// POST: body expects { group_id, user_id, invited_by }
 exports.handler = async (event, context) => {
     logger.info(`Received request at Groups Invite endpoint!`);
     const { body } = event;
-    const { group_id, user_id, group_name } = JSON.parse(body);
+    const { group_id, user_id, group_name, invited_by } = JSON.parse(body);
 
     logger.info(
-        `Publishing user ${user_id} to group_id ${group_id}, name ${group_name} in SNS`
+        `user ${user_id} to group_id ${group_id}, name ${group_name}, invited by ${invited_by} in SNS`
     );
     const region = process.env.AWS_REGION;
     aws.config.update({ region: region });

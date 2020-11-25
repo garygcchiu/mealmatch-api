@@ -1,0 +1,12 @@
+{
+  "name": "groups-appetite",
+  "version": "1.0.0",
+  "description": "Lambda functions for get groups-appetite endpoint",
+  "main": "index.js",
+  "author": "Gary Chiu",
+  "scripts": {
+    "test": "mocha tests/unit"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}

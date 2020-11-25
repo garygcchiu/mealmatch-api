@@ -7,14 +7,16 @@ const logger = require(getLoggerPath()).child({
     service: 'groups-sns',
 });
 
-// SNS Subscriber, expects { group_id, user_id } in SNS Message
+// SNS Subscriber, expects { group_id, user_id, invited_by } in SNS Message
 exports.handler = async (event, context, callback) => {
     logger.info('Received Group Invite SNS message!!!');
     const { Sns } = event.Records[0];
-    const { group_id, user_id, group_name } = JSON.parse(Sns.Message);
+    const { group_id, user_id, group_name, invited_by } = JSON.parse(
+        Sns.Message
+    );
 
     logger.info(
-        `Adding user ${user_id} to group_id ${group_id}, name = ${group_name}`
+        `Adding user ${user_id} to group_id ${group_id}, name = ${group_name}, invited by ${invited_by}`
     );
 
     // configure AWS SDK
@@ -31,7 +33,13 @@ exports.handler = async (event, context, callback) => {
         UpdateExpression:
             'set group_invites = list_append(if_not_exists(group_invites, :empty_list), :g)',
         ExpressionAttributeValues: {
-            ':g': [{ id: group_id, name: group_name }],
+            ':g': [
+                {
+                    id: group_id,
+                    name: group_name,
+                    invited_by: invited_by,
+                },
+            ],
             ':empty_list': [],
         },
         ReturnValues: 'UPDATED_NEW',
