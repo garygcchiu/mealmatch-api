@@ -1,0 +1,13 @@
+{
+  "name": "categories-restaurants",
+  "version": "1.0.0",
+  "description": "Lambda function for categories-restaurants endpoint",
+  "main": "index.js",
+  "author": "Gary Chiu",
+  "scripts": {
+    "test": "mocha tests/unit"
+  },
+  "dependencies": {
+  },
+  "devDependencies": {}
+}

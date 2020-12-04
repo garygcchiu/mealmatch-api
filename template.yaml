@@ -89,32 +89,26 @@ Resources:
               - dynamodb:*
             Resource: !GetAtt UserTable.Arn
 
-  CategoriesExploreFunction:
-    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+  CategoriesRestaurantsFunction:
+    Type: AWS::Serverless::Function
     Properties:
-      CodeUri: src/categories/explore/
+      CodeUri: src/categories/restaurants/
       Handler: index.handler
       Runtime: nodejs12.x
-      Events:
-        Explore:
-          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
-          Properties:
-            Path: /categories/explore
-            RestApiId: !Ref MealMatchAPIGateway
-            Method: get
       Layers:
         - !Ref UtilsLayer
+      Events:
+        RespondInvite:
+          Type: Api
+          Properties:
+            Path: /categories/restaurants
+            RestApiId: !Ref MealMatchAPIGateway
+            Method: get
       Environment:
         Variables:
           NODE_ENV: !Ref Env
-          CATEGORY_TABLE: Category
-      Policies:
-        - Statement:
-          - Sid: DynamoDBCategoriesTablePowerUser
-            Effect: Allow
-            Action:
-            - dynamodb:Scan
-            Resource: 'arn:aws:dynamodb:us-east-1:268394913050:table/Category'
+          FOURSQUARE_API_CLIENT_ID: '{{resolve:secretsmanager:prod-foursquare-api-credentials:SecretString:ClientId}}'
+          FOURSQUARE_API_CLIENT_SECRET: '{{resolve:secretsmanager:prod-foursquare-api-credentials:SecretString:ClientSecret}}'
 
   UsersAppetiteFunction:
     Type: AWS::Serverless::Function
