@@ -1,4 +1,5 @@
-const aws = require('aws-sdk');
+const AWSXRay = require('aws-xray');
+const aws = AWSXRay.captureAWS(require('aws-sdk'));
 const { getLoggerPath } = require('./utils');
 
 const ddb = new aws.DynamoDB.DocumentClient({ apiVersion: '2012-10-08' });

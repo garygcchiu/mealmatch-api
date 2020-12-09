@@ -9,9 +9,9 @@ const getConfigUtilsPath = () => {
 
 const getLoggerPath = () => {
     return getLayersPath('logger');
-}
+};
 
 module.exports = {
     getConfigUtilsPath,
     getLoggerPath,
-}
+};

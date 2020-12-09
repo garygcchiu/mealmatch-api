@@ -1,4 +1,5 @@
-const aws = require('aws-sdk');
+const AWSXRay = require('aws-xray');
+const aws = AWSXRay.captureAWS(require('aws-sdk'));
 
 const { getLoggerPath } = require('./utils');
 const logger = require(getLoggerPath()).child({

@@ -3,6 +3,7 @@
     "config-utils": "latest",
     "foursquare-utils": "latest",
     "google-utils": "latest",
-    "logger": "latest"
+    "logger": "latest",
+    "aws-xray": "latest"
   }
 }

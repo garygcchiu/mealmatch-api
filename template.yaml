@@ -51,6 +51,7 @@ Resources:
             Method: get
       Layers:
         - !Ref UtilsLayer
+      Tracing: Active
       Environment:
         Variables:
           NODE_ENV: !Ref Env
@@ -77,6 +78,7 @@ Resources:
       Runtime: nodejs12.x
       Layers:
         - !Ref UtilsLayer
+      Tracing: Active
       Environment:
         Variables:
           NODE_ENV: !Ref Env
@@ -97,6 +99,7 @@ Resources:
       Runtime: nodejs12.x
       Layers:
         - !Ref UtilsLayer
+      Tracing: Active
       Events:
         RespondInvite:
           Type: Api
@@ -131,6 +134,7 @@ Resources:
             Method: post
       Layers:
         - !Ref UtilsLayer
+      Tracing: Active
       Environment:
         Variables:
           NODE_ENV: !Ref Env
@@ -166,6 +170,7 @@ Resources:
             Method: get
       Layers:
         - !Ref UtilsLayer
+      Tracing: Active
       Environment:
         Variables:
           NODE_ENV: !Ref Env
@@ -195,6 +200,7 @@ Resources:
             Method: get
       Layers:
         - !Ref UtilsLayer
+      Tracing: Active
       Environment:
         Variables:
           NODE_ENV: !Ref Env
@@ -223,6 +229,7 @@ Resources:
             Method: post
       Layers:
         - !Ref UtilsLayer
+      Tracing: Active
       Environment:
         Variables:
           NODE_ENV: !Ref Env
@@ -253,6 +260,7 @@ Resources:
             Method: post
       Layers:
         - !Ref UtilsLayer
+      Tracing: Active
       Environment:
         Variables:
           NODE_ENV: !Ref Env
@@ -286,6 +294,7 @@ Resources:
             Method: get
       Layers:
         - !Ref UtilsLayer
+      Tracing: Active
       Environment:
         Variables:
           NODE_ENV: !Ref Env
@@ -315,6 +324,7 @@ Resources:
       Runtime: nodejs12.x
       Layers:
         - !Ref UtilsLayer
+      Tracing: Active
       Environment:
         Variables:
           NODE_ENV: !Ref Env
@@ -341,6 +351,7 @@ Resources:
       Runtime: nodejs12.x
       Layers:
         - !Ref UtilsLayer
+      Tracing: Active
       Events:
         Create:
           Type: Api
@@ -374,6 +385,7 @@ Resources:
       Runtime: nodejs12.x
       Layers:
         - !Ref UtilsLayer
+      Tracing: Active
       Events:
         Create:
           Type: Api
@@ -405,6 +417,7 @@ Resources:
       Runtime: nodejs12.x
       Layers:
         - !Ref UtilsLayer
+      Tracing: Active
       Events:
         Invite:
           Type: Api
@@ -433,6 +446,7 @@ Resources:
       Runtime: nodejs12.x
       Layers:
         - !Ref UtilsLayer
+      Tracing: Active
       Events:
         RespondInvite:
           Type: Api
@@ -466,6 +480,7 @@ Resources:
       Runtime: nodejs12.x
       Layers:
         - !Ref UtilsLayer
+      Tracing: Active
       Events:
         RespondInvite:
           Type: Api
@@ -500,6 +515,7 @@ Resources:
       Runtime: nodejs12.x
       Layers:
         - !Ref UtilsLayer
+      Tracing: Active
       Events:
         RespondInvite:
           Type: Api

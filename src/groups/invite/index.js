@@ -1,4 +1,5 @@
-const aws = require('aws-sdk');
+const AWSXRay = require('aws-xray');
+const aws = AWSXRay.captureAWS(require('aws-sdk'));
 const sns = new aws.SNS({ apiVersion: '2010-03-31' });
 
 const { getLoggerPath } = require('./utils');

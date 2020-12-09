@@ -19,12 +19,13 @@ exports.handler = async (event, context) => {
     let res;
     try {
         res = await getNearbyByCategoryId(clientId, clientSecret, categoryId);
+        logger.info('Got Foursquare res!');
     } catch (err) {
         logger.error('getNearbyByCategoryId err: ', { err });
     }
 
     return {
-        status: 200,
-        body: JSON.stringify(res),
+        statusCode: 200,
+        body: JSON.stringify(res.data),
     };
 };
