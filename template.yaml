@@ -541,6 +541,37 @@ Resources:
               - !GetAtt UserTable.Arn
               - !GetAtt GroupsTable.Arn
 
+  UserAvatarSubmitFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/users/avatar/
+      Handler: submit.handler
+      Runtime: nodejs12.x
+      Layers:
+        - !Ref UtilsLayer
+      Tracing: Active
+      Events:
+        RespondInvite:
+          Type: Api
+          Properties:
+            Path: /users/avatar
+            RestApiId: !Ref MealMatchAPIGateway
+            Method: post
+      Environment:
+        Variables:
+          NODE_ENV: !Ref Env
+          USERS_TABLE: User
+      Policies:
+        - Statement:
+          - Sid: DynamoDBUsersTableUpdate
+            Effect: Allow
+            Action:
+              - dynamodb:GetItem
+              - dynamodb:PutItem
+              - dynamodb:UpdateItem
+            Resource:
+              - !GetAtt UserTable.Arn
+
   ########################
   #
   # API Gateway
@@ -692,6 +723,34 @@ Resources:
       FunctionName: !Ref GroupInvitesSNSFunction
       Principal: "sns.amazonaws.com"
 
+  ########################
+  #
+  # S3 Buckets
+  #
+  ########################
+  AssetsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - BucketKeyEnabled: true
+            ServerSideEncryptionByDefault:
+             SSEAlgorithm: AES256
+      BucketName: mealmatch-assets
+      CorsConfiguration:
+        CorsRules:
+          - AllowedOrigins:
+              - '*'
+            AllowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+            AllowedHeaders:
+              - '*'
+            Id: AllowGETAccess
+            MaxAge: 3600
+
 Outputs:
   # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
   # Find out more about other implicit resources you can reference within SAM
@@ -708,4 +767,7 @@ Outputs:
   CustomApiDomain:
     Description: "Custom domain name for the API"
     Value: !GetAtt ApiDomain.RegionalDomainName
+  AssetsBucket:
+    Description: "S3 Bucket for assets"
+    Value: !GetAtt AssetsBucket.Arn
 

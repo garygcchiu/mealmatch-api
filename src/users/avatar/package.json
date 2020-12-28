@@ -1,0 +1,15 @@
+{
+  "name": "users-avatar",
+  "version": "1.0.0",
+  "description": "Lambda function for users avatar endpoint",
+  "main": "index.js",
+  "author": "Gary Chiu",
+  "scripts": {
+    "test": "mocha tests/unit"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "chai": "^4.2.0",
+    "mocha": "^6.1.4"
+  }
+}

@@ -5,15 +5,20 @@ const { getLoggerPath } = require('./utils');
 const ddb = new aws.DynamoDB.DocumentClient({ apiVersion: '2012-10-08' });
 
 const logger = require(getLoggerPath()).child({
-    service: 'users-info',
+    service: 'users-avatar-submit',
 });
 
 exports.handler = async (event, context) => {
-    logger.info(`Received request at Users Fetch endpoint!`);
+    logger.info(`Received request at Users Avatar Submit endpoint!`);
+
+    const { body } = event;
+    const updateObj = JSON.parse(body);
 
     const usersTable = process.env.USERS_TABLE;
     const region = process.env.AWS_REGION;
     aws.config.update({ region: region });
+
+    logger.info('body = ', { body });
 
     // retrieve user sub
     let userSub;
@@ -27,25 +32,22 @@ exports.handler = async (event, context) => {
         };
     }
 
-    // call DynamoDB
+    // call DynamoDB to add to user's avatar url
+    const updateParams = {
+        TableName: usersTable,
+        Key: { id: userSub },
+        UpdateExpression: 'set avatar = :a',
+        ExpressionAttributeValues: {
+            ':a': updateObj.avatarUrl,
+        },
+        ReturnValues: 'UPDATED_NEW',
+    };
+
     let userInfo;
     try {
-        const ddbResponse = await ddb
-            .get({
-                TableName: usersTable,
-                Key: { id: userSub },
-                AttributesToGet: [
-                    'display_username',
-                    'appetite',
-                    'following',
-                    'groups',
-                    'group_invites',
-                    'avatar',
-                ],
-            })
-            .promise();
-        userInfo = ddbResponse.Item || {};
-        logger.info(`Successfully received user info`, { userInfo });
+        const ddbResponse = await ddb.update(updateParams).promise();
+        logger.info(`Successfully updated user avatar`, { ddbResponse });
+        userInfo = ddbResponse.Attributes;
     } catch (err) {
         logger.error(`ERROR reading from DynamoDB: ${err.message}`);
         return {
