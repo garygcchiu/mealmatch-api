@@ -28,10 +28,10 @@ exports.handler = async (event, context) => {
                 given_name: event.request.userAttributes.given_name || '',
                 family_name: event.request.userAttributes.family_name || '',
                 display_username:
-                    (event.request.userAttributes.identities &&
+                    (event.request.userAttributes.identities && // Social Sign In
                         event.request.userAttributes.identities.length > 0 &&
                         event.userName) ||
-                    '', // Social Sign In -- temporarily use username, Basic Auth is fine
+                    event.userName, // Basic Auth
                 email: event.request.userAttributes.email,
                 created_at: date.toISOString(),
             },
