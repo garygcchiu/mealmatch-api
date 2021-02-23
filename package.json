@@ -1,7 +1,7 @@
 {
-  "name": "restauranto-api",
+  "name": "mealmatch-api",
   "version": "0.0.1",
-  "description": "Restauranto",
+  "description": "API for the mealmatch.io app",
   "scripts": {
     "dev": "sam build; sam local start-api --env-vars local.env.json;",
     "invoke": "sam build; sam local invoke;",
