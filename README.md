@@ -90,6 +90,10 @@ To delete the sample application that you created, use the AWS CLI. Assuming you
 aws cloudformation delete-stack --stack-name kickstarter-api
 ```
 
+## Contributing 
+
+Looking to contribute? Visit the [Trello board](https://trello.com/b/5cjVYplA/mealmatchio) to see is prioritized, in the backlog, in progress, etc. Feel free to shoot me an email at gary.gc.chiu@gmail.com or open a PR if you're interested!
+
 ## Resources
 
 See the [AWS SAM developer guide](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/what-is-sam.html) for an introduction to SAM specification, the SAM CLI, and serverless application concepts.
